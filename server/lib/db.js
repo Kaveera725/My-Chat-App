@@ -4,8 +4,14 @@ import mongoose from "mongoose";
 export const connectDB = async () =>{
     try {
         mongoose.connection.on('connected', ()=> console.log('Database Connected'));
-       await mongoose.connect(`${process.env.MONGODB_URI}/chat-app`) 
+        mongoose.connection.on('error', (err)=> console.log('MongoDB connection error:', err));
+        await mongoose.connect(process.env.MONGODB_URI, {
+            serverSelectionTimeoutMS: 5000,
+        });
+        console.log('MongoDB Connected Successfully');
     } catch (error) {
-        console.log(error);
+        console.log('MongoDB Connection Failed:', error.message);
+        console.log('Server will continue without database...');
+        // Don't exit, let server run without DB for now
     }
 }

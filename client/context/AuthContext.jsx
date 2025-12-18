@@ -4,8 +4,10 @@ import toast from "react-hot-toast";
 import { io } from "socket.io-client"
 
 
-const backendUrl = import.meta.env.VITE_BACKEND_URL;
+const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 axios.defaults.baseURL = backendUrl;
+
+console.log('Backend URL:', backendUrl);
 
 export const AuthContext = createContext();
 
@@ -25,7 +27,8 @@ export const AuthProvider = ({ children })=>{
                 connectSocket(data.user)
             }
         } catch (error) {
-            toast.error(error.message)
+            // Silent fail on initial check
+            console.log("Not authenticated");
         }
     }
 
@@ -45,7 +48,14 @@ const login = async (state, credentials)=>{
             toast.error(data.message)
         }
     } catch (error) {
-        toast.error(error.message)
+        console.error("Login error:", error);
+        if (error.response) {
+            toast.error(error.response.data.message || "Server error");
+        } else if (error.request) {
+            toast.error("Cannot connect to server. Please make sure the backend is running.");
+        } else {
+            toast.error(error.message);
+        }
     }
 }
 
