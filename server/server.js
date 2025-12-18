@@ -38,11 +38,17 @@ io.on("connection", (socket)=>{
 
 // Middleware setup
 app.use(express.json({limit: "4mb"}));
-app.use(cors());
+app.use(cors({
+    origin: ["http://localhost:5173", "http://localhost:5174", "http://localhost:3000"],
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization", "token"]
+}));
 
 
 // Routes setup
 app.use("/api/status", (req, res)=> res.send("Server is live"));
+app.use("/api/test", (req, res)=> res.json({success: true, message: "Backend is working!"}));
 app.use("/api/auth", userRouter);
 app.use("/api/messages", messageRouter)
 
