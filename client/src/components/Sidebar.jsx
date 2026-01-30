@@ -4,19 +4,29 @@ import { AuthContext } from '../../context/AuthContext';
 import { ChatContext } from '../../context/ChatContext';
 import assets from '../assets/assets';
 
+/**
+ * Sidebar Component
+ * Displays the list of users, search functionality, and user menu
+ * Hidden on mobile when a chat is selected
+ */
 const Sidebar = () => {
 
+    // Get chat-related functions and state from ChatContext
     const {getUsers, users, selectedUser, setSelectedUser,
         unseenMessages, setUnseenMessages } = useContext(ChatContext);
 
+    // Get authentication functions and online users status from AuthContext
     const {logout, onlineUsers} = useContext(AuthContext)
 
+    // State for search input
     const [input, setInput] = useState(false)
 
     const navigate = useNavigate();
 
+    // Filter users based on search input
     const filteredUsers = input ? users.filter((user)=>user.fullName.toLowerCase().includes(input.toLowerCase())) : users;
 
+    // Fetch users whenever online users status changes
     useEffect(()=>{
         getUsers();
     },[onlineUsers])
