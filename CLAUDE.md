@@ -112,6 +112,7 @@ Use the test endpoints:
 - `GET /api/status`: Returns "Server is live"
 - `GET /api/test`: Returns `{success: true, message: "Backend is working!"}`
 
+
 ## Deployment
 
 Both client and server have `vercel.json` configs:
