@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState } from "react";
+import { createContext, useCallback, useEffect, useState } from "react";
 import axios from 'axios'
 import toast from "react-hot-toast";
 import { io } from "socket.io-client"
@@ -18,19 +18,35 @@ export const AuthProvider = ({ children })=>{
     const [onlineUsers, setOnlineUsers] = useState([]);
     const [socket, setSocket] = useState(null);
 
+    // Connect socket function to handle socket connection and online users updates
+    const connectSocket = useCallback((userData) => {
+        if(!userData || socket?.connected) return;
+        const newSocket = io(backendUrl, {
+            query: {
+                userId: userData._id,
+            }
+        });
+        newSocket.connect();
+        setSocket(newSocket);
+
+        newSocket.on("getOnlineUsers", (userIds)=>{
+            setOnlineUsers(userIds);
+        })
+    }, [socket]);
+
     // Check if user is authenticated and if so, set the user data and connect the socket
-    const checkAuth = async () => {
+    const checkAuth = useCallback(async () => {
         try {
             const { data } = await axios.get("/api/auth/check");
             if (data.success) {
                 setAuthUser(data.user)
                 connectSocket(data.user)
             }
-        } catch (error) {
+        } catch {
             // Silent fail on initial check
             console.log("Not authenticated");
         }
-    }
+    }, [connectSocket])
 
 // Login function to handle user authentication and socket connection
 
@@ -85,28 +101,12 @@ const login = async (state, credentials)=>{
         }
     }
 
-    // Connect socket function to handle socket connection and online users updates
-    const connectSocket = (userData)=>{
-        if(!userData || socket?.connected) return;
-        const newSocket = io(backendUrl, {
-            query: {
-                userId: userData._id,
-            }
-        });
-        newSocket.connect();
-        setSocket(newSocket);
-
-        newSocket.on("getOnlineUsers", (userIds)=>{
-            setOnlineUsers(userIds);
-        })
-    }
-
     useEffect(()=>{
         if(token){
             axios.defaults.headers.common["token"] = token;
         }
         checkAuth();
-    },[])
+    }, [token, checkAuth])
 
     const value = {
         axios,

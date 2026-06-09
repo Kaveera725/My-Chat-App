@@ -29,13 +29,13 @@ const Sidebar = () => {
     // Fetch users whenever online users status changes
     useEffect(()=>{
         getUsers();
-    },[onlineUsers])
+    },[onlineUsers, getUsers])
 
   return (
     <div className={`bg-gradient-to-br from-indigo-500/10 to-purple-500/10 backdrop-blur-sm h-full p-5 overflow-y-scroll text-white border-r border-white/10 ${selectedUser ? "max-md:hidden" : ''}`}>
       <div className='pb-5'>
         <div className='flex justify-between items-center'>
-            <img src={assets.logo} alt="logo" className='max-w-40' />
+            <img src={assets.logo_big} alt="logo" className='max-w-40' />
             <div className="relative py-2 group">
                 <img src={assets.menu_icon} alt="Menu" className='max-h-5 cursor-pointer hover:opacity-80 transition-opacity' />
                 <div className='absolute top-full right-0 z-20 w-40 p-4 rounded-xl bg-gray-900/95 backdrop-blur-xl border border-white/20 shadow-2xl text-gray-100 hidden group-hover:block'>
