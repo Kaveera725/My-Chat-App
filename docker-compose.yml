@@ -1,0 +1,68 @@
+# SwiftTalk full stack: MongoDB + Node/Express API + Nginx-served React SPA.
+# The client container is the single public entrypoint (port 80) and reverse
+# proxies /api and /socket.io to the server over the internal Docker network.
+services:
+  mongo:
+    image: mongo:7
+    container_name: swifttalk-mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-changeme}
+    volumes:
+      - mongo_data:/data/db
+    # Not published to the host by default — only the API reaches it on the
+    # internal network. Expose 27017 only if you need external DB access.
+    networks:
+      - swifttalk
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  server:
+    build:
+      context: ./server
+    image: ${REGISTRY:-swifttalk}/server:${TAG:-latest}
+    container_name: swifttalk-server
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      MONGODB_URI: ${MONGODB_URI:-mongodb://${MONGO_USERNAME:-admin}:${MONGO_PASSWORD:-changeme}@mongo:27017/swifttalk?authSource=admin}
+      JWT_SECRET: ${JWT_SECRET}
+      CLIENT_URL: ${CLIENT_URL}
+      CLOUDINARY_NAME: ${CLOUDINARY_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - swifttalk
+
+  client:
+    build:
+      context: ./client
+      args:
+        # Same-origin: SPA talks to the proxy, not a separate API host.
+        VITE_BACKEND_URL: ""
+    image: ${REGISTRY:-swifttalk}/client:${TAG:-latest}
+    container_name: swifttalk-client
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      # Enable after provisioning TLS certs into the container/host:
+      # - "443:443"
+    depends_on:
+      - server
+    networks:
+      - swifttalk
+
+volumes:
+  mongo_data:
+
+networks:
+  swifttalk:
+    driver: bridge

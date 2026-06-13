@@ -1,0 +1,15 @@
+# Production deployment compose: pulls pre-built images from the registry
+# (built and pushed by CI) instead of building on the EC2 host.
+# Usage on the server:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml pull
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+services:
+  server:
+    build: null
+    image: ${REGISTRY}/server:${TAG:-latest}
+    pull_policy: always
+
+  client:
+    build: null
+    image: ${REGISTRY}/client:${TAG:-latest}
+    pull_policy: always

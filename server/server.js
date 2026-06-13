@@ -38,8 +38,21 @@ io.on("connection", (socket)=>{
 
 // Middleware setup
 app.use(express.json({limit: "4mb"}));
+
+// Allowed origins: local dev defaults plus any comma-separated values from CLIENT_URL
+const allowedOrigins = [
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "http://localhost:3000",
+    ...(process.env.CLIENT_URL ? process.env.CLIENT_URL.split(",").map(o => o.trim()) : [])
+];
+
 app.use(cors({
-    origin: ["http://localhost:5173", "http://localhost:5174", "http://localhost:3000"],
+    origin: (origin, callback) => {
+        // Allow same-origin / non-browser requests (no origin header) and whitelisted origins
+        if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+        return callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization", "token"]
@@ -56,10 +69,12 @@ app.use("/api/messages", messageRouter)
 // Connect to MongoDB
 await connectDB();
 
-if(process.env.NODE_ENV !== "production"){
+// Start an HTTP listener everywhere except Vercel's serverless runtime, which
+// invokes the exported handler instead of a long-lived listening process.
+if(!process.env.VERCEL){
     const PORT = process.env.PORT || 5000;
     server.listen(PORT, ()=> console.log("Server is running on PORT: " + PORT));
 }
 
-// Export server for Vervel
+// Export server for Vercel
 export default server;

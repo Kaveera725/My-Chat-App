@@ -1,1 +1,22 @@
 node_modules
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Build output
+client/dist
+dist
+
+# Terraform
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+crash.log
+
+# SSH keys
+*.pem
